@@ -5,4 +5,4 @@ parameters:
     scanDirectories:
         - ../../Packages/Libraries
     bootstrapFiles:
-        - ../../Packages/Libraries/autoload.php
+        - phpstan-bootstrap.php
