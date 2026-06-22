@@ -28,10 +28,14 @@ helper to resolve the selected nodes again in the frontend.
   id and node aggregate id; the workspace and dimension space point are
   resolved from the rendering context (the context node) when the reference is
   loaded in Fusion.
-* `NodeHelper` Eel helper (`Shel.Neos.CrossContentRepositoryReferences.Node`)
+* `ReferencesHelper` Eel helper (`Shel.Neos.CrossContentRepositoryReferences`)
   to resolve a node (or a list of nodes) from a serialized
   `CrossContentRepositoryReference` in Fusion, using a context node for the
   workspace and dimension.
+* `referenceNodesAcrossCR` {@see \Shel\Neos\CrossContentRepositoryReferences\FlowQueryOperations\ReferenceNodesAcrossCROperation
+  FlowQuery operation} that reads cross-CR references from a node property
+  and replaces the FlowQuery context with the resolved nodes:
+  `${q(node).referenceNodesAcrossCR("propertyName")}`.
 
 ## Installation
 
@@ -98,7 +102,7 @@ Resolve them in Fusion via the registered Eel helper
 node) and the serialized reference:
 
 ```fusion
-prototype(Your.Package:NodeType) {
+prototype(Your.Package:NodeType) < prototype(Neos.Neos:ContentComponent) {
     # Single reference (property "crossReference" holds a JSON string)
     referenceNode = ${Shel.Neos.CrossContentRepositoryReferences.node(node, node.properties.crossReference)}
 
@@ -106,11 +110,11 @@ prototype(Your.Package:NodeType) {
     referenceNodes = ${Shel.Neos.CrossContentRepositoryReferences.nodes(node, node.properties.crossReferences)}
 
     # Render the referenced nodes
-    renderedReferences = Neos.Fusion:Loop {
-        items = ${this.referenceNodes}
+    renderer = Neos.Fusion:Loop {
+        items = ${props.referenceNodes}
         itemName = 'referencedNode'
         itemRenderer = Neos.Neos:ContentCase {
-            nodePath = '/referencedNode'
+            node = ${referencedNode}
         }
     }
 
@@ -129,6 +133,44 @@ instances (or `null` / a filtered array if a node could not be resolved), so
 you can use them like any other node - including `q(node)` FlowQuery
 operations (note: FlowQuery operates within the referenced node's content
 repository).
+
+### Using the `referenceNodesAcrossCR` FlowQuery operation
+
+The package also provides a dedicated FlowQuery operation that reads the
+cross-CR references from a node property and replaces the context with the
+resolved nodes, enabling further chaining:
+
+```fusion
+prototype(Your.Package:NodeType) < prototype(Neos.Neos:ContentComponent) {
+    # The operation reads the property "crossReferences" from the current node,
+    # resolves the stored cross-CR references, and sets the resolved nodes
+    # as the FlowQuery context.
+    items = ${q(node).referenceNodesAcrossCR('crossReferences')}
+    
+    # Now iterate over the resolved nodes and render them
+    renderer = Neos.Fusion:Loop {
+        items = ${props.items}
+        itemName = 'referencedNode'
+        itemRenderer = Neos.Neos:ContentCase {
+            node = ${referencedNode}
+        }
+    }
+
+    # Further chaining works as usual
+    titles = ${q(node).referenceNodesAcrossCR('crossReferences').property('title')}
+
+    @cache {
+        mode = 'cached'
+        entryTags {
+            references = ${Neos.Caching.nodeTag(q(node).referenceNodesAcrossCR('crossReferences'))}
+        }
+    }
+}
+```
+
+Single and multiple references are both supported: if the property contains a
+single JSON string, one node is resolved; if it contains an array of strings,
+all referenced nodes are resolved. Unresolvable entries are silently skipped.
 
 ## How it works
 

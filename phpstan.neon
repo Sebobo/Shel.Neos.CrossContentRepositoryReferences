@@ -2,7 +2,5 @@ parameters:
     level: max
     paths:
         - Classes
-    scanDirectories:
-        - ../../Packages/Libraries
     bootstrapFiles:
         - phpstan-bootstrap.php
