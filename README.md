@@ -100,10 +100,10 @@ node) and the serialized reference:
 ```fusion
 prototype(Your.Package:NodeType) {
     # Single reference (property "crossReference" holds a JSON string)
-    referenceNode = ${Shel.Neos.CrossContentRepositoryReferences.Node.node(node, node.properties.crossReference)}
+    referenceNode = ${Shel.Neos.CrossContentRepositoryReferences.node(node, node.properties.crossReference)}
 
     # Multiple references (property "crossReferences" holds an array of JSON strings)
-    referenceNodes = ${Shel.Neos.CrossContentRepositoryReferences.Node.nodes(node, node.properties.crossReferences)}
+    referenceNodes = ${Shel.Neos.CrossContentRepositoryReferences.nodes(node, node.properties.crossReferences)}
 
     # Render the referenced nodes
     renderedReferences = Neos.Fusion:Loop {
@@ -111,6 +111,14 @@ prototype(Your.Package:NodeType) {
         itemName = 'referencedNode'
         itemRenderer = Neos.Neos:ContentCase {
             nodePath = '/referencedNode'
+        }
+    }
+
+    @cache {
+        mode = 'cached'
+        entryTags {
+            # Flush the cache for this node when the referenced nodes change
+            references = ${Neos.Caching.nodeTag(Shel.Neos.CrossContentRepositoryReferences.nodes(node, node.properties.crossReferences))}
         }
     }
 }
