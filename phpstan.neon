@@ -1,0 +1,8 @@
+parameters:
+    level: max
+    paths:
+        - Classes
+    scanDirectories:
+        - ../../Packages/Libraries
+    bootstrapFiles:
+        - ../../Packages/Libraries/autoload.php

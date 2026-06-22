@@ -1,0 +1,48 @@
+Neos:
+  Fusion:
+    defaultContext:
+      Shel.Neos.CrossContentRepositoryReferences: 'Shel\Neos\CrossContentRepositoryReferences\Fusion\ReferencesHelper'
+  Neos:
+    nodeTypes:
+      presets:
+        properties:
+          crossContentRepositoryReference:
+            type: string
+            ui:
+              label: 'Cross Content Repository Reference'
+              reloadIfChanged: true
+              inspector:
+                group: 'links'
+                editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+                editorOptions:
+                  multiple: false
+                  allowEmpty: true
+                  placeholder: 'Select a node'
+                  dataSourceIdentifier: 'cross-content-repository-references'
+                  dataSourceDisableCaching: true
+                  dataSourceAdditionalData:
+                    # Starting point including the content repository id, using the
+                    # pattern: /<contentRepositoryId>/<RootNodeType>/<siteName>
+                    startingPoint: '/default/<Neos.Neos:Sites>'
+                    # Optional: limit selectable node types. Defaults to "Neos.Neos:Document".
+                    nodeTypes: ['Neos.Neos:Document']
+                    # Optional: override the dimension space point as a JSON object.
+                    # When omitted, the dimension space point of the edited node is converted to be compatible with the target content repository.
+                    # dimensionValues: '{"language":"de"}'
+          crossContentRepositoryReferences:
+            type: array
+            ui:
+              label: 'Cross Content Repository References'
+              reloadIfChanged: true
+              inspector:
+                group: 'links'
+                editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+                editorOptions:
+                  multiple: true
+                  allowEmpty: true
+                  placeholder: 'Select nodes'
+                  dataSourceIdentifier: 'cross-content-repository-references'
+                  dataSourceDisableCaching: true
+                  dataSourceAdditionalData:
+                    startingPoint: '/default/<Neos.Neos:Sites>'
+                    nodeTypes: ['Neos.Neos:Document']

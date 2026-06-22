@@ -1,0 +1,39 @@
+{
+    "name": "shel/neos-cross-contentrepository-references",
+    "type": "neos-plugin",
+    "version": "1.0.0",
+    "license": "GPL-3.0+",
+    "description": "Allows referencing content from other content repositories in the Neos CMS backend",
+    "keywords": [
+        "neos",
+        "neoscms",
+        "flow",
+        "contentrepository"
+    ],
+    "require": {
+        "php": "^8.3",
+        "neos/flow": "^9.1",
+        "neos/neos": "^9.1"
+    },
+    "authors": [
+        {
+            "name": "Sebastian Helzle",
+            "email": "sebastian@helzle.it",
+            "homepage": "https://www.helzle.it",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Shel\\Neos\\CrossContentRepositoryReferences\\": "Classes"
+        }
+    },
+    "scripts": {
+        "phpstan": "phpstan analyse -c phpstan.neon"
+    },
+    "extra": {
+        "neos": {
+            "package-key": "Shel.Neos.CrossContentRepositoryReferences"
+        }
+    }
+}
