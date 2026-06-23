@@ -67,7 +67,7 @@ final readonly class CrossContentRepositoryReference implements \JsonSerializabl
     }
 
     /**
-     * @return array{contentRepositoryId: string, nodeAggregateId: string}
+     * @return array{__identity: string, contentRepositoryId: string, nodeAggregateId: string}
      */
     public function jsonSerialize(): array
     {
