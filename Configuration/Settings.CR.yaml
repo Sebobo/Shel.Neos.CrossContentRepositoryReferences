@@ -1,0 +1,8 @@
+Neos:
+  ContentRepositoryRegistry:
+    presets:
+      default:
+        propertyConverters:
+          CrossContentRepositoryReferenceNormalizer:
+            position: 'start 1000'
+            className: Shel\Neos\CrossContentRepositoryReferences\PropertyConverter\CrossContentRepositoryReferenceNormalizer

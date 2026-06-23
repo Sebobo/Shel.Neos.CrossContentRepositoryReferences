@@ -1,13 +1,10 @@
 Neos:
-  Fusion:
-    defaultContext:
-      Shel.Neos.CrossContentRepositoryReferences: 'Shel\Neos\CrossContentRepositoryReferences\Fusion\ReferencesHelper'
   Neos:
     nodeTypes:
       presets:
         properties:
           crossContentRepositoryReference:
-            type: string
+            type: Shel\Neos\CrossContentRepositoryReferences\Domain\Model\CrossContentRepositoryReference
             ui:
               label: 'Cross Content Repository Reference'
               reloadIfChanged: true
@@ -30,7 +27,7 @@ Neos:
                     # When omitted, the dimension space point of the edited node is converted to be compatible with the target content repository.
                     # dimensionValues: '{"language":"de"}'
           crossContentRepositoryReferences:
-            type: array
+            type: array<Shel\Neos\CrossContentRepositoryReferences\Dto\CrossContentRepositoryReference>
             ui:
               label: 'Cross Content Repository References'
               reloadIfChanged: true

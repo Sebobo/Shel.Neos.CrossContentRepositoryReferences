@@ -53,7 +53,7 @@ final readonly class CrossContentRepositoryReference implements \JsonSerializabl
         }
     }
 
-    public static function fromJsonString(string $jsonString): ?self
+    public static function fromString(string $jsonString): ?self
     {
         try {
             $decoded = json_decode($jsonString, true, 512, JSON_THROW_ON_ERROR);
@@ -66,23 +66,14 @@ final readonly class CrossContentRepositoryReference implements \JsonSerializabl
         return self::fromArray($decoded);
     }
 
-    public function toJson(): string
-    {
-        try {
-            return json_encode($this, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new \RuntimeException(
-                sprintf('Failed to JSON-encode CrossContentRepositoryReference: %s', $e->getMessage()), 1750614400, $e
-            );
-        }
-    }
-
     /**
      * @return array{contentRepositoryId: string, nodeAggregateId: string}
      */
     public function jsonSerialize(): array
     {
         return [
+            # The identity is currently required for the Neos.Ui to match the options
+            '__identity' => $this->contentRepositoryId->value . ':' . $this->nodeAggregateId->value,
             'contentRepositoryId' => $this->contentRepositoryId->value,
             'nodeAggregateId' => $this->nodeAggregateId->value,
         ];

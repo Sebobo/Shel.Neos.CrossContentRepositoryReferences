@@ -75,23 +75,17 @@ final class ReferenceNodesAcrossCROperation implements OperationInterface
             /** @var mixed $propertyValue */
             $propertyValue = $contextNode->getProperty($propertyName);
 
-            if (is_string($propertyValue)) {
-                $reference = CrossContentRepositoryReference::fromJsonString($propertyValue);
-                if ($reference !== null) {
-                    $resolved = $this->resolveNode($contextNode, $reference);
-                    if ($resolved !== null) {
-                        $output[] = $resolved;
-                    }
+            if ($propertyValue instanceof CrossContentRepositoryReference) {
+                $resolved = $this->resolveNode($contextNode, $propertyValue);
+                if ($resolved !== null) {
+                    $output[] = $resolved;
                 }
             } elseif (is_array($propertyValue)) {
                 foreach ($propertyValue as $item) {
-                    if (is_string($item)) {
-                        $reference = CrossContentRepositoryReference::fromJsonString($item);
-                        if ($reference !== null) {
-                            $resolved = $this->resolveNode($contextNode, $reference);
-                            if ($resolved !== null) {
-                                $output[] = $resolved;
-                            }
+                    if ($item instanceof CrossContentRepositoryReference) {
+                        $resolved = $this->resolveNode($contextNode, $item);
+                        if ($resolved !== null) {
+                            $output[] = $resolved;
                         }
                     }
                 }

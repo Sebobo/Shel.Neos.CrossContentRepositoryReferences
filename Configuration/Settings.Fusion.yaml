@@ -1,0 +1,4 @@
+Neos:
+  Fusion:
+    defaultContext:
+      Shel.Neos.CrossContentRepositoryReferences: 'Shel\Neos\CrossContentRepositoryReferences\Fusion\ReferencesHelper'

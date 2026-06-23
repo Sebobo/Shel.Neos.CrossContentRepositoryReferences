@@ -25,13 +25,13 @@ final readonly class ReferenceOption implements \JsonSerializable
     }
 
     /**
-     * @return array{label: string, value: string, nodeType: NodeTypeName}
+     * @return array{label: string, value: CrossContentRepositoryReference, nodeType: NodeTypeName}
      */
     public function jsonSerialize(): array
     {
         return [
             'label' => $this->label,
-            'value' => $this->value->toJson(),
+            'value' => $this->value,
             'nodeType' => $this->nodeType,
         ];
     }

@@ -41,14 +41,13 @@ class ReferencesHelper implements ProtectedContextAwareInterface
      * context node.
      *
      * @param Node|null $contextNode The node whose workspace and dimension space point are used to resolve the reference
-     * @param string|null $serializedReference JSON string as produced by {@see CrossContentRepositoryReference::toJson()}
      */
-    public function node(?Node $contextNode, ?string $serializedReference): ?Node
+    public function node(?Node $contextNode, ?CrossContentRepositoryReference $reference): ?Node
     {
-        if ($contextNode === null || $serializedReference === null || $serializedReference === '') {
+        if ($contextNode === null || $reference === null) {
             return null;
         }
-        return $this->resolveNode($contextNode, $serializedReference);
+        return $this->resolveNode($contextNode, $reference);
     }
 
     /**
@@ -59,17 +58,17 @@ class ReferencesHelper implements ProtectedContextAwareInterface
      * The order of the input array is preserved; unresolvable entries are skipped.
      *
      * @param Node|null $contextNode The node whose workspace and dimension space point are used to resolve the references
-     * @param array<int,string|null> $serializedReferences
+     * @param list<CrossContentRepositoryReference|null> $references
      * @return array<int,Node>
      */
-    public function nodes(?Node $contextNode, array $serializedReferences): array
+    public function nodes(?Node $contextNode, array $references): array
     {
         if ($contextNode === null) {
             return [];
         }
         $nodes = [];
-        foreach ($serializedReferences as $serializedReference) {
-            $node = $this->node($contextNode, $serializedReference);
+        foreach ($references as $reference) {
+            $node = $this->node($contextNode, $reference);
             if ($node !== null) {
                 $nodes[] = $node;
             }
@@ -77,12 +76,8 @@ class ReferencesHelper implements ProtectedContextAwareInterface
         return $nodes;
     }
 
-    private function resolveNode(Node $contextNode, string $serializedReference): ?Node
+    private function resolveNode(Node $contextNode, CrossContentRepositoryReference $reference): ?Node
     {
-        $reference = CrossContentRepositoryReference::fromJsonString($serializedReference);
-        if ($reference === null) {
-            return null;
-        }
         try {
             $contentRepository = $this->contentRepositoryRegistry->get($reference->contentRepositoryId);
             $dimensionSpacePoint = $this->dimensionTranslator->translateDimensionSpacePoint(

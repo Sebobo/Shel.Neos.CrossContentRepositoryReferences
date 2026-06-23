@@ -22,9 +22,8 @@ helper to resolve the selected nodes again in the frontend.
 * The `startingPoint` argument includes the content repository id using the
   pattern `/<contentRepositoryId>/<RootNodeType>/<siteName>`, e.g.
   `/hub/<Neos.Neos:Sites>/example-site`.
-* Selected nodes are stored as serialized `CrossContentRepositoryReference`
-  JSON strings — one string for a single reference, an array of strings for
-  multiple references. The serialized form contains only the content repository
+* Selected nodes are stored as serialized `CrossContentRepositoryReference`. 
+  The serialized form contains only the content repository
   id and node aggregate id; the workspace and dimension space point are
   resolved from the rendering context (the context node) when the reference is
   loaded in Fusion.
@@ -174,21 +173,16 @@ all referenced nodes are resolved. Unresolvable entries are silently skipped.
 
 ## How it works
 
-1. `ReferencesDataSource::getData()` parses `startingPoint` into a
-   `ContentRepositoryId` and an `AbsoluteNodePath`, fetches a subgraph for the
-   resolved content repository, workspace and dimension space point, and finds
-   the start node via `findNodeByAbsolutePath()`.
-2. It lists descendants using
-   `ContentSubgraphInterface::findDescendantNodes()` with a `NodeTypeCriteria`
-   filter and an optional `SearchTerm`.
-3. Each result is mapped to `{label, value, nodeType}` where `value` is
-   `CrossContentRepositoryReference::fromNode($node)->toJson()` — containing
-   only the content repository id and node aggregate id. This is what gets
-   stored on the property.
-4. In Fusion, `NodeHelper::node()` deserializes the
-   `CrossContentRepositoryReference`, fetches the matching content repository
-   and a subgraph using the **context node's** workspace and dimension space
-   point, and resolves the node via `findNodeById()`.
+The Neos 9 CR uses a separate table for each CR to store references. Neos 8 stored them as properties.
+As cross-CR references are not supported in the Neos 9 core yet, this package stores them also as properties. The helpers in this package and the datasource make this mostly invisible to the integrator. But this also means that these references cannot have their own properties (yet) and are not bidirectional.
+
+The package uses the DTO `CrossContentRepositoryReference` to store the
+serialized reference. This DTO could be extended in the future with a custom editor UI to also support properties on the reference itself.
+
+The DTO only stores the NodeAggregateId and ContentRepositoryId in the reference. The dimension resolution happens when loading the referenced node and uses the context of the source node to find the best match in the target content repository. Dimensions that don't exist in the context node are ignored. For dimensions that only exist in the target content repository, the default is used.
+If dimensions exist in both repositories, the values are matched.
+
+Caching works like with normal nodes, see the example above.
 
 ## Contributions
 
