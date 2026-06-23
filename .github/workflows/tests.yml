@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  phpstan:
+  quality:
     runs-on: ubuntu-latest
 
     strategy:
@@ -17,7 +17,7 @@ jobs:
         neosVersion:
           - '9.1'
 
-    name: 'PHPStan - Neos ${{ matrix.neosVersion }}'
+    name: 'Quality - Neos ${{ matrix.neosVersion }}'
 
     steps:
     - name: Checkout package
@@ -36,7 +36,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.phpVersion }}
-        tools: composer:v2, phpstan
+        tools: composer:v2, phpstan, phpunit
 
     - name: Get composer cache directory
       id: composer-cache
@@ -60,6 +60,16 @@ jobs:
         composer config --no-plugins allow-plugins.neos/composer-plugin true
         composer install --no-interaction --no-progress
 
+    - name: Register package and regenerate autoloader
+      working-directory: neos-base-distribution
+      run: |
+        composer config --no-plugins repositories.shel-crosscontentrepo path Packages/Plugins/Shel.Neos.CrossContentRepositoryReferences
+        composer require --no-interaction --no-progress shel/neos-cross-contentrepository-references
+
     - name: PHPStan analysis
       working-directory: neos-base-distribution/Packages/Plugins/Shel.Neos.CrossContentRepositoryReferences
       run: phpstan analyse -c phpstan.neon --no-progress
+
+    - name: PHPUnit tests
+      working-directory: neos-base-distribution/Packages/Plugins/Shel.Neos.CrossContentRepositoryReferences
+      run: phpunit -c phpunit.xml

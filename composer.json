@@ -28,8 +28,17 @@
             "Shel\\Neos\\CrossContentRepositoryReferences\\": "Classes"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Shel\\Neos\\CrossContentRepositoryReferences\\Tests\\": "Tests"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
+    },
     "scripts": {
-        "phpstan": "phpstan analyse -c phpstan.neon"
+        "phpstan": "phpstan analyse -c phpstan.neon",
+        "test": "phpunit -c phpunit.xml"
     },
     "extra": {
         "neos": {
