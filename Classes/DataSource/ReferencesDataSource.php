@@ -14,6 +14,11 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
+use Neos\Media\Domain\Model\AssetInterface;
+use Neos\Media\Domain\Model\ThumbnailConfiguration;
+use Neos\Media\Domain\Repository\AssetRepository;
+use Neos\Media\Domain\Service\AssetService;
+use Neos\Media\Domain\Service\ThumbnailService;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
 use Neos\Neos\Service\DataSource\AbstractDataSource;
 use Shel\Neos\CrossContentRepositoryReferences\Dto\CrossContentRepositoryReference;
@@ -52,6 +57,15 @@ class ReferencesDataSource extends AbstractDataSource
 
     #[Flow\Inject]
     protected NodeLabelGeneratorInterface $nodeLabelGenerator;
+
+    #[Flow\Inject]
+    protected AssetRepository $assetRepository;
+
+    #[Flow\Inject]
+    protected AssetService $assetService;
+
+    #[Flow\Inject]
+    protected ThumbnailService $thumbnailService;
 
     /**
      * @param Node|null $node The node currently being edited
@@ -122,7 +136,14 @@ class ReferencesDataSource extends AbstractDataSource
 
         $descendants = $subgraph->findDescendantNodes($startingNode->aggregateId, $filter);
 
-        return $this->buildOptions($descendants);
+        $imageProperty = is_string($arguments['imageProperty'] ?? null) && $arguments['imageProperty'] !== ''
+            ? $arguments['imageProperty']
+            : null;
+        $thumbnailWidth = isset($arguments['thumbnailWidth']) && is_numeric($arguments['thumbnailWidth'])
+            ? (int)$arguments['thumbnailWidth']
+            : 100;
+
+        return $this->buildOptions($descendants, $imageProperty, $thumbnailWidth);
     }
 
     /**
@@ -179,18 +200,91 @@ class ReferencesDataSource extends AbstractDataSource
 
     /**
      * @param Nodes $nodes
+     * @param string|null $imageProperty Name of a node property holding an image/asset to render as a preview thumbnail
+     * @param int $thumbnailWidth Maximum width of the generated preview thumbnail
      * @return list<ReferenceOption>
      */
-    private function buildOptions(Nodes $nodes): array
+    private function buildOptions(Nodes $nodes, ?string $imageProperty, int $thumbnailWidth): array
     {
         $options = [];
         foreach ($nodes as $descendant) {
+            $preview = $imageProperty !== null ? $this->resolvePreviewUri($descendant, $imageProperty, $thumbnailWidth) : null;
             $options[] = new ReferenceOption(
                 $this->nodeLabelGenerator->getLabel($descendant),
                 CrossContentRepositoryReference::fromNode($descendant),
                 $descendant->nodeTypeName,
+                $preview,
             );
         }
         return $options;
+    }
+
+    /**
+     * Resolve a small preview thumbnail URI for a node's image property.
+     *
+     * The property is expected to hold a Neos.Media asset (e.g. an ImageInterface).
+     * If the property is missing, empty, not an asset, or the thumbnail cannot be
+     * generated, null is returned so the editor simply renders without a preview.
+     */
+    private function resolvePreviewUri(Node $node, string $propertyName, int $thumbnailWidth): ?string
+    {
+        if (!$node->properties->offsetExists($propertyName)) {
+            return null;
+        }
+
+        try {
+            $asset = $this->resolveAssetFromPropertyValue($node->properties->offsetGet($propertyName));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        if ($asset === null) {
+            return null;
+        }
+
+        try {
+            $configuration = new ThumbnailConfiguration(
+                width: null,
+                maximumWidth: $thumbnailWidth,
+                height: null,
+                maximumHeight: null,
+                allowCropping: false,
+                allowUpScaling: false,
+                async: false,
+            );
+            $thumbnailData = $this->assetService->getThumbnailUriAndSizeForAsset($asset, $configuration);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return is_array($thumbnailData) && isset($thumbnailData['src']) && is_string($thumbnailData['src'])
+            ? $thumbnailData['src']
+            : null;
+    }
+
+    /**
+     * Resolve a Neos.Media asset from a node property value.
+     *
+     * Neos 9 deserializes asset-typed properties to AssetInterface instances via
+     * the property collection, but we also handle the raw serialized forms
+     * (objects with __identity and `asset://` URI strings) defensively.
+     */
+    private function resolveAssetFromPropertyValue(mixed $value): ?AssetInterface
+    {
+        if ($value instanceof AssetInterface) {
+            return $value;
+        }
+
+        if (is_array($value) && isset($value['__identity']) && is_string($value['__identity'])) {
+            $asset = $this->assetRepository->findByIdentifier($value['__identity']);
+            return $asset instanceof AssetInterface ? $asset : null;
+        }
+
+        if (is_string($value) && preg_match('/^asset:\/\/(?<assetId>[\w-]+)/i', $value, $matches)) {
+            $asset = $this->assetRepository->findByIdentifier($matches['assetId']);
+            return $asset instanceof AssetInterface ? $asset : null;
+        }
+
+        return null;
     }
 }

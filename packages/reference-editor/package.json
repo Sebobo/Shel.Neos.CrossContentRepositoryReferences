@@ -1,0 +1,35 @@
+{
+  "name": "@shel/neos-cross-contentrepository-reference-editor",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
+    "@eslint/js": "^9.39.4",
+    "@neos-project/neos-ui-extensibility": "~9.1.5",
+    "esbuild": "~0.28.1",
+    "esbuild-css-modules-plugin": "^3.1.5",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.5.0",
+    "prettier": "^3.8.4",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.62.0"
+  },
+  "neos": {
+    "buildTargetDirectory": "../Resources/Public/JavaScript"
+  },
+  "packageManager": "yarn@4.9.2",
+  "prettier": {
+    "printWidth": 120,
+    "semi": true,
+    "singleQuote": true,
+    "tabWidth": 4
+  }
+}

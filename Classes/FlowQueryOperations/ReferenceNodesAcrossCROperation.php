@@ -46,7 +46,7 @@ final class ReferenceNodesAcrossCROperation implements OperationInterface
     protected DimensionTranslator $dimensionTranslator;
 
     /**
-     * @param array<int, mixed> $context
+     * @param list<mixed> $context
      */
     public function canEvaluate($context): bool
     {
@@ -54,7 +54,7 @@ final class ReferenceNodesAcrossCROperation implements OperationInterface
     }
 
     /**
-     * @param array<int, mixed> $arguments
+     * @param list<mixed> $arguments
      */
     public function evaluate(FlowQuery $flowQuery, array $arguments): void
     {

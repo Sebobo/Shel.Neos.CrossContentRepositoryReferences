@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["esbuild-css-modules-plugin-ns-css:src/features/style.module.css"],
+  "sourcesContent": [".style-module-referenceSelectBox div[class*=\"_multiLineWithThumbnail__item\"] {\n  grid-template-columns: auto min-content 1fr;\n  grid-template-areas: \"style-module-image style-module-icon style-module-label\"\n                       \"style-module-image style-module-secondaryLabel style-module-secondaryLabel\";\n}\n\n.style-module-referenceSelectBox div[class*=\"_multiLineWithThumbnail__item\"] span {\n  grid-area: style-module-label;\n}\n\n.style-module-referenceSelectBox div[class*=\"_multiLineWithThumbnail__item\"] span[class*=\"_multiLineWithThumbnail__secondaryLabel\"] {\n  grid-area: style-module-secondaryLabel;\n}\n\n.style-module-referenceSelectBox div[class*=\"_multiLineWithThumbnail__image\"] {\n  width: 60px;\n  height: -webkit-fill-available;\n  height: stretch;\n}\n\n.style-module-referenceSelectBox div[class*=\"_listPreviewElement__iconWrapper\"] {\n  grid-area: style-module-icon;\n  width: min-content;\n  margin-right: 0;\n}\n"],
+  "mappings": "AAAA,CAAC,gCAAgC,GAAG,CAAC,sCACnC,sBAAuB,KAAK,YAAY,IACxC,oBAAqB,0DACA,4EACvB,CAEA,CANC,gCAMgC,GAAG,CAAC,sCAAwC,KAC3E,UAAW,kBACb,CAEA,CAVC,gCAUgC,GAAG,CAAC,sCAAwC,IAAI,CAAC,gDAChF,UAAW,2BACb,CAEA,CAdC,gCAcgC,GAAG,CAAC,uCACnC,MAAO,KACP,OAAQ,uBACR,OAAQ,OACV,CAEA,CApBC,gCAoBgC,GAAG,CAAC,yCACnC,UAAW,kBACX,MAAO,YACP,aAAc,CAChB",
+  "names": []
+}

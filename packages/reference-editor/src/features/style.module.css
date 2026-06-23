@@ -1,0 +1,27 @@
+.referenceSelectBox {
+    div[class*="_multiLineWithThumbnail__item"] {
+        grid-template-areas:
+            "image icon label"
+            "image secondaryLabel secondaryLabel";
+        grid-template-columns: auto min-content 1fr;
+
+        span {
+            grid-area: label;
+        }
+
+        span[class*="_multiLineWithThumbnail__secondaryLabel"] {
+            grid-area: secondaryLabel;
+        }
+    }
+
+    div[class*="_multiLineWithThumbnail__image"] {
+        width: 60px;
+        height: stretch;
+    }
+
+    div[class*="_listPreviewElement__iconWrapper"] {
+        grid-area: icon;
+        margin-right: 0;
+        width: min-content;
+    }
+}

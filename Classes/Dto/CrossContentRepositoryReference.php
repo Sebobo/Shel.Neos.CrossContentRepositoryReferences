@@ -67,13 +67,11 @@ final readonly class CrossContentRepositoryReference implements \JsonSerializabl
     }
 
     /**
-     * @return array{__identity: string, contentRepositoryId: string, nodeAggregateId: string}
+     * @return array{contentRepositoryId: string, nodeAggregateId: string}
      */
     public function jsonSerialize(): array
     {
         return [
-            # The identity is currently required for the Neos.Ui to match the options
-            '__identity' => $this->contentRepositoryId->value . ':' . $this->nodeAggregateId->value,
             'contentRepositoryId' => $this->contentRepositoryId->value,
             'nodeAggregateId' => $this->nodeAggregateId->value,
         ];

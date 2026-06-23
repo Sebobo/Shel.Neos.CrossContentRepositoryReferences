@@ -1,0 +1,10 @@
+Neos:
+  Neos:
+    Ui:
+      resources:
+        javascript:
+          'Shel.Neos.CrossContentRepositoryReferences':
+            resource: 'resource://Shel.Neos.CrossContentRepositoryReferences/Public/Assets/Plugin.js'
+        stylesheets:
+          'Shel.Neos.CrossContentRepositoryReferences':
+            resource: 'resource://Shel.Neos.CrossContentRepositoryReferences/Public/Assets/Plugin.css'

@@ -10,7 +10,7 @@ Neos:
               reloadIfChanged: true
               inspector:
                 group: 'links'
-                editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+                editor: 'Shel.Neos.CrossContentRepositoryReferences/Inspector/Editors/SelectBoxEditor'
                 editorOptions:
                   multiple: false
                   allowEmpty: true
@@ -26,6 +26,11 @@ Neos:
                     # Optional: override the dimension space point as a JSON object.
                     # When omitted, the dimension space point of the edited node is converted to be compatible with the target content repository.
                     # dimensionValues: '{"language":"de"}'
+                    # Optional: name of a node property holding an image asset, used
+                    # to render small preview thumbnails next to the options.
+                    imageProperty: 'image'
+                    # Optional: maximum width (in px) of the generated preview thumbnail. Defaults to 100.
+                    # thumbnailWidth: 100
           crossContentRepositoryReferences:
             type: array<Shel\Neos\CrossContentRepositoryReferences\Dto\CrossContentRepositoryReference>
             ui:
@@ -33,7 +38,7 @@ Neos:
               reloadIfChanged: true
               inspector:
                 group: 'links'
-                editor: 'Neos.Neos/Inspector/Editors/SelectBoxEditor'
+                editor: 'Shel.Neos.CrossContentRepositoryReferences/Inspector/Editors/SelectBoxEditor'
                 editorOptions:
                   multiple: true
                   allowEmpty: true
@@ -43,3 +48,5 @@ Neos:
                   dataSourceAdditionalData:
                     startingPoint: '/default/<Neos.Neos:Sites>'
                     nodeTypes: ['Neos.Neos:Document']
+                    imageProperty: 'image'
+                    # Additional options: see above

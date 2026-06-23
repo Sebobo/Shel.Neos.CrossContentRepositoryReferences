@@ -14,6 +14,9 @@ use Neos\ContentRepository\Core\NodeType\NodeTypeName;
  * which contains only the content repository id and node aggregate id - the
  * workspace and dimension space point are resolved from the rendering context
  * (the context node) when the reference is loaded in Fusion.
+ *
+ * `preview` is an optional thumbnail URI (e.g. for a node's image property)
+ * that the inspector editor can render next to the label.
  */
 final readonly class ReferenceOption implements \JsonSerializable
 {
@@ -21,18 +24,24 @@ final readonly class ReferenceOption implements \JsonSerializable
         public string $label,
         public CrossContentRepositoryReference $value,
         public NodeTypeName $nodeType,
+        public ?string $preview = null,
     ) {
     }
 
     /**
-     * @return array{label: string, value: CrossContentRepositoryReference, nodeType: NodeTypeName}
+     * @return array{label: string, value: CrossContentRepositoryReference, nodeType: NodeTypeName, preview?: string}
      */
     public function jsonSerialize(): array
     {
-        return [
+        $data = [
             'label' => $this->label,
+            'secondaryLabel' => $this->value->contentRepositoryId->value,
             'value' => $this->value,
             'nodeType' => $this->nodeType,
         ];
+        if ($this->preview !== null) {
+            $data['preview'] = $this->preview;
+        }
+        return $data;
     }
 }
