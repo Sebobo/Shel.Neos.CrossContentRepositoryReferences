@@ -215,13 +215,19 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
     );
 
     // Navigation: when clicking an option (single-select header or multi-select item),
-    // dispatch setSrc to navigate the content canvas to the node's preview URI.
+    // either navigate the content canvas (same-CR, via setSrc) or reload the entire
+    // backend on the correct domain (cross-CR, via window.location.href).
     const canNavigate = !creationDialogIsOpen && !Object.keys(changesInInspector).length;
 
     const handleNavigate = useCallback(
-        (uri: string | null | undefined) => {
-            if (uri && canNavigate) {
-                dispatch(actions.UI.ContentCanvas.setSrc(uri));
+        (option: { uri?: string | null; backendUri?: string | null } | undefined | null) => {
+            if (!option || !canNavigate) {
+                return;
+            }
+            if (option.backendUri) {
+                window.location.href = option.backendUri;
+            } else if (option.uri) {
+                dispatch(actions.UI.ContentCanvas.setSrc(option.uri));
             }
         },
         [dispatch, canNavigate],
@@ -231,13 +237,13 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
         // Find the selected option by matching the canonicalized value.
         if (processedSelectBoxOptions.length > 0 && processedValue) {
             const selectedOption = processedSelectBoxOptions.find((option) => option.value === processedValue);
-            handleNavigate(selectedOption?.uri ?? null);
+            handleNavigate(selectedOption ?? null);
         }
     }, [handleNavigate, processedSelectBoxOptions, processedValue]);
 
     const handleItemClick = useCallback(
-        (option: { uri?: string | null }) => {
-            handleNavigate(option.uri ?? null);
+        (option: { uri?: string | null; backendUri?: string | null }) => {
+            handleNavigate(option ?? null);
         },
         [handleNavigate],
     );

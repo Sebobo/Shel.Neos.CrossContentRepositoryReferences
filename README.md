@@ -191,6 +191,10 @@ Contributions are very welcome! Please create detailed issues and PRs.
 **If you use this package and want to support or speed up its development,
 [get in touch with me](mailto:me@helzle.it).**
 
+## Thanks
+
+* The implementation of the initial release was supported by [Ahorn](https://ahorn.io).
+
 ## License
 
 See [License](./LICENSE.txt)

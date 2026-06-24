@@ -7,6 +7,8 @@ namespace Shel\Neos\CrossContentRepositoryReferences\DataSource;
 use Neos\ContentRepository\Core\DimensionSpace\DimensionSpacePoint;
 use Neos\ContentRepository\Core\NodeType\NodeTypeNames;
 use Neos\ContentRepository\Core\Projection\ContentGraph\AbsoluteNodePath;
+use Neos\ContentRepository\Core\Projection\ContentGraph\ContentSubgraphInterface;
+use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindClosestNodeFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\FindDescendantNodesFilter;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\NodeType\NodeTypeCriteria;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
@@ -20,7 +22,10 @@ use Neos\Media\Domain\Model\ThumbnailConfiguration;
 use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Media\Domain\Service\AssetService;
 use Neos\Media\Domain\Service\ThumbnailService;
+use Neos\Neos\Domain\Model\Site;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
+use Neos\Neos\Domain\Repository\SiteRepository;
+use Neos\Neos\Domain\Service\NodeTypeNameFactory;
 use Neos\Neos\FrontendRouting\NodeUriBuilder;
 use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\Service\DataSource\AbstractDataSource;
@@ -72,6 +77,9 @@ class ReferencesDataSource extends AbstractDataSource
 
     #[Flow\Inject]
     protected NodeUriBuilderFactory $nodeUriBuilderFactory;
+
+    #[Flow\Inject]
+    protected SiteRepository $siteRepository;
 
     /**
      * @param Node|null $node The node currently being edited
@@ -155,7 +163,14 @@ class ReferencesDataSource extends AbstractDataSource
             $this->controllerContext->getRequest(),
         );
 
-        return $this->buildOptions($descendants, $nodeUriBuilder, $imageProperty, $thumbnailWidth);
+        // Determine whether the referenced nodes live in a different content
+        // repository. If so, build a backendUri base so the frontend can do a
+        // full page reload to the correct domain instead of just updating the
+        // content canvas iframe (which would leave the UI shell on the wrong CR).
+        $isCrossCr = !$node->contentRepositoryId->equals($contentRepositoryId);
+        $backendUriBase = $isCrossCr ? $this->buildBackendUriBase($contentRepositoryId, $subgraph, $startingNode) : null;
+
+        return $this->buildOptions($descendants, $nodeUriBuilder, $imageProperty, $thumbnailWidth, $backendUriBase);
     }
 
     /**
@@ -215,23 +230,86 @@ class ReferencesDataSource extends AbstractDataSource
      * @param NodeUriBuilder $nodeUriBuilder
      * @param string|null $imageProperty Name of a node property holding an image/asset to render as a preview thumbnail
      * @param int $thumbnailWidth Maximum width of the generated preview thumbnail
+     * @param string|null $backendUriBase Base backend URL (without node param) for cross-CR references, or null for same-CR
      * @return list<ReferenceOption>
      */
-    private function buildOptions(Nodes $nodes, NodeUriBuilder $nodeUriBuilder, ?string $imageProperty, int $thumbnailWidth): array
+    private function buildOptions(Nodes $nodes, NodeUriBuilder $nodeUriBuilder, ?string $imageProperty, int $thumbnailWidth, ?string $backendUriBase): array
     {
         $options = [];
         foreach ($nodes as $descendant) {
             $preview = $imageProperty !== null ? $this->resolvePreviewUri($descendant, $imageProperty, $thumbnailWidth) : null;
             $uri = $this->resolveNodeUri($descendant, $nodeUriBuilder);
+            $backendUri = $backendUriBase !== null
+                ? $backendUriBase . '?node=' . urlencode(NodeAddress::fromNode($descendant)->toJson())
+                : null;
             $options[] = new ReferenceOption(
                 $this->nodeLabelGenerator->getLabel($descendant),
                 CrossContentRepositoryReference::fromNode($descendant),
                 $descendant->nodeTypeName,
                 $preview,
                 $uri,
+                $backendUri,
             );
         }
         return $options;
+    }
+
+    /**
+     * Build the base backend URL for cross-CR references.
+     *
+     * Resolves the target site's primary domain and constructs the Neos backend
+     * URL (BackendController::indexAction) on that domain. Each individual option
+     * will append `?node=<NodeAddress JSON>` to this base.
+     *
+     * @return string Backend URL (without node query parameter), e.g. `https://other-cr-site.tld/neos/content`
+     */
+    private function buildBackendUriBase(ContentRepositoryId $targetCrId, ContentSubgraphInterface $subgraph, Node $startingNode): string
+    {
+        // Find the site node belonging to the target content repository so we
+        // can look up its primary domain.
+        $site = $this->resolveSiteForContentRepository($subgraph, $startingNode);
+        $primaryDomain = $site?->getPrimaryDomain();
+
+        // Build the backend route URL (e.g. /neos/content) using the UriBuilder
+        // of the current controller context.
+        $uriBuilder = $this->controllerContext->getUriBuilder();
+        $uriBuilder->reset();
+        $uriBuilder->setFormat('html');
+        $uriBuilder->setCreateAbsoluteUri(true);
+        $backendUrl = $uriBuilder->uriFor('index', [], 'Backend', 'Neos.Neos.Ui');
+
+        // If the target site has a domain and it differs from the current
+        // request's host, replace the host (and scheme / port if needed).
+        if ($primaryDomain !== null) {
+            $currentUri = new \GuzzleHttp\Psr7\Uri($backendUrl);
+            $targetHost = $primaryDomain->getHostname();
+            if ($targetHost !== $currentUri->getHost()) {
+                $backendUrl = (string)$currentUri
+                    ->withHost($targetHost)
+                    ->withScheme($primaryDomain->getScheme() ?: $currentUri->getScheme())
+                    ->withPort($primaryDomain->getPort() ?: $currentUri->getPort());
+            }
+        }
+
+        return $backendUrl;
+    }
+
+    /**
+     * Resolve the Neos Site entity for the site containing the given starting node.
+     *
+     * Finds the closest site ancestor of the starting node and looks up the
+     * Site entity by its node name. Returns null if no site can be resolved.
+     */
+    private function resolveSiteForContentRepository(ContentSubgraphInterface $subgraph, Node $startingNode): ?Site
+    {
+        $siteNode = $subgraph->findClosestNode(
+            $startingNode->aggregateId,
+            FindClosestNodeFilter::create(nodeTypes: NodeTypeNameFactory::NAME_SITE),
+        );
+        if ($siteNode === null || $siteNode->name === null) {
+            return null;
+        }
+        return $this->siteRepository->findOneByNodeName((string)$siteNode->name);
     }
 
     /**

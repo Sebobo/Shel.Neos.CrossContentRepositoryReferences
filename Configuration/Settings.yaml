@@ -1,0 +1,7 @@
+Neos:
+  Flow:
+    http:
+      middlewares:
+        'crossContentRepositoryReferencePreview':
+          position: 'after detectSite'
+          middleware: 'Shel\Neos\CrossContentRepositoryReferences\Middleware\CrossContentRepositoryPreviewMiddleware'

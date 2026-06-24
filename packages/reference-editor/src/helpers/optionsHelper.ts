@@ -21,6 +21,7 @@ export type RawReferenceOption = {
     nodeType: string;
     preview?: string | null;
     uri?: string | null;
+    backendUri?: string | null;
     icon?: string;
     secondaryLabel?: string;
     tertiaryLabel?: string;
@@ -34,6 +35,7 @@ export type SelectBoxOption = {
     icon?: string;
     preview?: string | null;
     uri?: string | null;
+    backendUri?: string | null;
     secondaryLabel?: string;
     tertiaryLabel?: string;
     group?: string;
@@ -165,6 +167,7 @@ export const processSelectBoxOptions = (
             icon,
             preview: selectBoxOption.preview,
             uri: selectBoxOption.uri,
+            backendUri: selectBoxOption.backendUri,
             secondaryLabel: selectBoxOption.secondaryLabel,
             tertiaryLabel: selectBoxOption.tertiaryLabel,
             disabled: selectBoxOption.disabled,
