@@ -12,6 +12,7 @@ use Neos\ContentRepository\Core\Projection\ContentGraph\Filter\NodeType\NodeType
 use Neos\ContentRepository\Core\Projection\ContentGraph\Node;
 use Neos\ContentRepository\Core\Projection\ContentGraph\Nodes;
 use Neos\ContentRepository\Core\SharedModel\ContentRepository\ContentRepositoryId;
+use Neos\ContentRepository\Core\SharedModel\Node\NodeAddress;
 use Neos\ContentRepositoryRegistry\ContentRepositoryRegistry;
 use Neos\Flow\Annotations as Flow;
 use Neos\Media\Domain\Model\AssetInterface;
@@ -20,6 +21,8 @@ use Neos\Media\Domain\Repository\AssetRepository;
 use Neos\Media\Domain\Service\AssetService;
 use Neos\Media\Domain\Service\ThumbnailService;
 use Neos\Neos\Domain\NodeLabel\NodeLabelGeneratorInterface;
+use Neos\Neos\FrontendRouting\NodeUriBuilder;
+use Neos\Neos\FrontendRouting\NodeUriBuilderFactory;
 use Neos\Neos\Service\DataSource\AbstractDataSource;
 use Shel\Neos\CrossContentRepositoryReferences\Dto\CrossContentRepositoryReference;
 use Shel\Neos\CrossContentRepositoryReferences\Dto\ReferenceOption;
@@ -66,6 +69,9 @@ class ReferencesDataSource extends AbstractDataSource
 
     #[Flow\Inject]
     protected ThumbnailService $thumbnailService;
+
+    #[Flow\Inject]
+    protected NodeUriBuilderFactory $nodeUriBuilderFactory;
 
     /**
      * @param Node|null $node The node currently being edited
@@ -143,7 +149,13 @@ class ReferencesDataSource extends AbstractDataSource
             ? (int)$arguments['thumbnailWidth']
             : 100;
 
-        return $this->buildOptions($descendants, $imageProperty, $thumbnailWidth);
+        // Build a preview URI builder for the current action request so we can
+        // produce clickable frontend URLs for each option.
+        $nodeUriBuilder = $this->nodeUriBuilderFactory->forActionRequest(
+            $this->controllerContext->getRequest(),
+        );
+
+        return $this->buildOptions($descendants, $nodeUriBuilder, $imageProperty, $thumbnailWidth);
     }
 
     /**
@@ -200,23 +212,46 @@ class ReferencesDataSource extends AbstractDataSource
 
     /**
      * @param Nodes $nodes
+     * @param NodeUriBuilder $nodeUriBuilder
      * @param string|null $imageProperty Name of a node property holding an image/asset to render as a preview thumbnail
      * @param int $thumbnailWidth Maximum width of the generated preview thumbnail
      * @return list<ReferenceOption>
      */
-    private function buildOptions(Nodes $nodes, ?string $imageProperty, int $thumbnailWidth): array
+    private function buildOptions(Nodes $nodes, NodeUriBuilder $nodeUriBuilder, ?string $imageProperty, int $thumbnailWidth): array
     {
         $options = [];
         foreach ($nodes as $descendant) {
             $preview = $imageProperty !== null ? $this->resolvePreviewUri($descendant, $imageProperty, $thumbnailWidth) : null;
+            $uri = $this->resolveNodeUri($descendant, $nodeUriBuilder);
             $options[] = new ReferenceOption(
                 $this->nodeLabelGenerator->getLabel($descendant),
                 CrossContentRepositoryReference::fromNode($descendant),
                 $descendant->nodeTypeName,
                 $preview,
+                $uri,
             );
         }
         return $options;
+    }
+
+    /**
+     * Build a frontend preview URI for a node.
+     *
+     * Uses the full {@see NodeAddress} (including content repository id,
+     * workspace, dimension space point) so the preview URL correctly navigates
+     * to the node even when it lives in a different content repository.
+     *
+     * URI generation is wrapped in a try/catch — if routing fails (unlikely)
+     * the option simply renders without a clickable link.
+     */
+    private function resolveNodeUri(Node $node, NodeUriBuilder $nodeUriBuilder): ?string
+    {
+        try {
+            $nodeAddress = NodeAddress::fromNode($node);
+            return (string)$nodeUriBuilder->previewUriFor($nodeAddress);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

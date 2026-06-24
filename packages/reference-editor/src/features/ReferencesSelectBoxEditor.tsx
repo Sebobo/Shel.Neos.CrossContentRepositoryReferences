@@ -1,7 +1,7 @@
 import React, { type FC, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { SelectBox, MultiSelectBox } from '@neos-project/react-ui-components';
-import { selectors } from '@neos-project/neos-ui-redux-store';
+import { selectors, actions } from '@neos-project/neos-ui-redux-store';
 import { translate } from '@neos-project/neos-ui-i18n';
 import { NeosContext } from '@neos-project/neos-ui-decorators';
 import {
@@ -104,6 +104,19 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
         return nodesSelectors.focusedNodePathSelector(state);
     });
 
+    const creationDialogIsOpen = useSelector((state: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = state as Record<string, any>;
+        return s?.ui?.nodeCreationDialog?.isOpen ?? false;
+    });
+    const changesInInspector = useSelector((state: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const s = state as Record<string, any>;
+        return s?.ui?.inspector?.valuesByNodePath ?? {};
+    });
+
+    const dispatch = useDispatch();
+
     const nodeTypesRegistry = useMemo<NodeTypesRegistry | undefined>(() => {
         try {
             return neosContext?.globalRegistry.get<NodeTypesRegistry | undefined>(
@@ -201,6 +214,34 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
         [commit, processedSelectBoxOptions],
     );
 
+    // Navigation: when clicking an option (single-select header or multi-select item),
+    // dispatch setSrc to navigate the content canvas to the node's preview URI.
+    const canNavigate = !creationDialogIsOpen && !Object.keys(changesInInspector).length;
+
+    const handleNavigate = useCallback(
+        (uri: string | null | undefined) => {
+            if (uri && canNavigate) {
+                dispatch(actions.UI.ContentCanvas.setSrc(uri));
+            }
+        },
+        [dispatch, canNavigate],
+    );
+
+    const handleHeaderClick = useCallback(() => {
+        // Find the selected option by matching the canonicalized value.
+        if (processedSelectBoxOptions.length > 0 && processedValue) {
+            const selectedOption = processedSelectBoxOptions.find((option) => option.value === processedValue);
+            handleNavigate(selectedOption?.uri ?? null);
+        }
+    }, [handleNavigate, processedSelectBoxOptions, processedValue]);
+
+    const handleItemClick = useCallback(
+        (option: { uri?: string | null }) => {
+            handleNavigate(option.uri ?? null);
+        },
+        [handleNavigate],
+    );
+
     if (!i18nRegistry) {
         return null;
     }
@@ -217,6 +258,7 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
                 options={processedSelectBoxOptions}
                 values={processedValue as string[]}
                 onValuesChange={handleMultiChange}
+                onItemClick={handleItemClick}
                 loadingLabel={loadingLabel}
                 ListPreviewElement={ReferenceOption}
                 displayLoadingIndicator={isLoading}
@@ -239,9 +281,11 @@ const ReferencesSelectBoxEditor: FC<EditorProps> = (props) => {
             options={searchTerm ? searchOptions(searchTerm, processedSelectBoxOptions) : processedSelectBoxOptions}
             value={processedValue as string}
             onValueChange={handleSingleChange}
+            onHeaderClick={handleHeaderClick}
             loadingLabel={loadingLabel}
             ListPreviewElement={ReferenceOption}
             displayLoadingIndicator={isLoading}
+            showDropDownToggle={false}
             placeholder={placeholder}
             allowEmpty={options.allowEmpty}
             displaySearchBox={shouldDisplaySearchBox(options, processedSelectBoxOptions)}

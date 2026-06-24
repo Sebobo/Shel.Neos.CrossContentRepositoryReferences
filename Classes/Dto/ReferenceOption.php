@@ -17,6 +17,10 @@ use Neos\ContentRepository\Core\NodeType\NodeTypeName;
  *
  * `preview` is an optional thumbnail URI (e.g. for a node's image property)
  * that the inspector editor can render next to the label.
+ *
+ * `uri` is an optional frontend preview URL for the referenced node. When
+ * present, clicking the option in the inspector navigates the content canvas
+ * to that URI. Built via {@see NodeUriBuilder::previewUriFor()}.
  */
 final readonly class ReferenceOption implements \JsonSerializable
 {
@@ -25,11 +29,12 @@ final readonly class ReferenceOption implements \JsonSerializable
         public CrossContentRepositoryReference $value,
         public NodeTypeName $nodeType,
         public ?string $preview = null,
+        public ?string $uri = null,
     ) {
     }
 
     /**
-     * @return array{label: string, value: CrossContentRepositoryReference, nodeType: NodeTypeName, preview?: string}
+     * @return array{label: string, secondaryLabel: string, value: CrossContentRepositoryReference, nodeType: NodeTypeName, preview?: string, uri?: string}
      */
     public function jsonSerialize(): array
     {
@@ -41,6 +46,9 @@ final readonly class ReferenceOption implements \JsonSerializable
         ];
         if ($this->preview !== null) {
             $data['preview'] = $this->preview;
+        }
+        if ($this->uri !== null) {
+            $data['uri'] = $this->uri;
         }
         return $data;
     }

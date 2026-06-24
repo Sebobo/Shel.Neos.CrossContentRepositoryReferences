@@ -38,6 +38,7 @@ declare module 'react' {
 
 declare module 'react-redux' {
     export const useSelector: any;
+    export const useDispatch: any;
     export const connect: any;
 }
 
@@ -50,6 +51,7 @@ declare module '@neos-project/react-ui-components' {
 
 declare module '@neos-project/neos-ui-redux-store' {
     export const selectors: any;
+    export const actions: any;
 }
 
 declare module '@neos-project/neos-ui-i18n' {

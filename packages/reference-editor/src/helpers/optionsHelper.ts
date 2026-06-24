@@ -20,6 +20,7 @@ export type RawReferenceOption = {
     value: CrossContentRepositoryReference;
     nodeType: string;
     preview?: string | null;
+    uri?: string | null;
     icon?: string;
     secondaryLabel?: string;
     tertiaryLabel?: string;
@@ -32,6 +33,7 @@ export type SelectBoxOption = {
     label: string;
     icon?: string;
     preview?: string | null;
+    uri?: string | null;
     secondaryLabel?: string;
     tertiaryLabel?: string;
     group?: string;
@@ -162,6 +164,7 @@ export const processSelectBoxOptions = (
             label: i18nRegistry.translate(selectBoxOption.label, selectBoxOption.label),
             icon,
             preview: selectBoxOption.preview,
+            uri: selectBoxOption.uri,
             secondaryLabel: selectBoxOption.secondaryLabel,
             tertiaryLabel: selectBoxOption.tertiaryLabel,
             disabled: selectBoxOption.disabled,
