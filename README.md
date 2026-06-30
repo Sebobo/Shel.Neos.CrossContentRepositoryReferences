@@ -44,6 +44,13 @@ Run this in your site package:
 
 Then run `composer update` in your project root.
 
+## Example
+
+The custom editor works similar to the usual `reference` and `references`
+editors but shows a preview and the origin CR of the selected node:
+
+![Example](./CrossReferencesExample.png)
+
 ## Usage
 
 ### Configure a property
